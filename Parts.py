@@ -1,3 +1,8 @@
+import json
+import random as r
+
+
+
 class Tile:
     def __init__(self, char, ptval):
         #Letter
@@ -16,7 +21,30 @@ class User:
         self.name = name
         self.letters = []
         self.MAXCT = 7
+
+        self.choices = {
+                "s": {
+                        "text": "Shuffle Letters", 
+                        "fn": self.shuffleLetters,
+                        "endTurn": False
+                    },
+                "v": {
+                        "text": "View Rack", 
+                        "fn": self.printRack,
+                        "endTurn": False
+                    }
+
+                }
      
+
+    def getChoice(self):
+        while True:
+            for key in self.choices.keys():
+                print(f"{key}: {self.choices[key]['text']}")
+            choice = input("Enter your choice -> ")
+            if choice in self.choices.keys():
+                break
+        return self.choices[choice]
 
     def _condenseletters(self):
         self.letters = [item for item in self.letters if item]
@@ -26,6 +54,9 @@ class User:
         for tile in self.letters:
             retStr += f"{tile!s}"
         return retStr 
+
+    def printRack(self):
+        print(self.getRackStr())
 
     def drawLetters(self,pool,num=0):
 
@@ -46,15 +77,20 @@ class User:
         for l in self.letters:
             print(l)
 
+    def shuffleLetters(self):
+        r.shuffle(self.letters)
+
     def takeTurn(self):
-        print(f"Player {self.name}'s turn")
-        print(f"Rack contains: {self.getRackStr()}")
-        input("Choose what to do --> ")
-        
+        print(f"{self.name}'s turn")
+        while True:
+            choice = self.getChoice() 
+            choice['fn']()
+            if choice['endTurn']:
+                break
+            else:
+                print(f"Still {self.name}'s turn")
 
 
-import json
-import random as r
 class LetterPool:
     def __init__(self):
         self.initfile = "tiles.json"

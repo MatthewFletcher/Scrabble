@@ -15,7 +15,8 @@ class Tile:
         self.adj = [None, None, None, None]
     def __str__(self):
         return f"[{self.char}{self.ptval}] "
-
+    def __repr__(self):
+        return f"{self.char}"
     def __eq__(self, other):
         if isinstance(other, str):
             return self.char == other
@@ -24,7 +25,7 @@ class Tile:
         else:
             return False 
 
-class User:
+class Player:
     def __init__(self, name):
         self.name = name
         self.letters = []
@@ -87,7 +88,7 @@ class User:
     def printRack(self):
         print(self.getRackStr())
 
-    def playWord(self, *args):
+    def playWord(self,*args):
         #If word is passed to function, use that word
         if not args:
             pass
@@ -162,24 +163,65 @@ class LetterPool:
             retList.append(self.pool.pop(r.randint(0,len(self.pool)-1)))
         return retList
 
+class Square:
+    def __init__(self, multNum=1, multType=None):
+        self.tile = None
+        self.letter = ""
+        self.multNum = multNum
+        self.multType = multType
+    
+    def placeTile(self, tile):
+        if self.tile:
+            return False
+        else:
+            self.tile = tile
+            self.letter = tile.char
+            return True
+
+
+
 class Board:
     def __init__(self):
         self.SIZE = 15
+        self.board = [[Square() for _ in range(self.SIZE)] for _ in
+                range(self.SIZE)]
+        self.center = self.board[8][8]
 
 
 
+    def printBoard(self):
+        print("   ", end="")
+        for idx in range(15):
+            print("{0: <2}".format(idx), end="")
+        print()
+        for idx in range(15):
+            print("{0: <2} |".format(idx), end="")
+            for jdx in range(15):
+                sq = self.board[idx][jdx]
+                if sq.tile == None:
+                    print(" ", end="|")
+                elif sq.letter == " ":
+                    print("*", end="|")
+                else:
+                    print(f"{sq.letter}", end="|")
+            #Print new line
 
+            print("") 
 
 class Game:
     def __init__(self, numPlayers=2):
+
+
+        self.board = Board()
+
         #Initialize letter pool
         self.letters = LetterPool()
 
         self.players = []
         #TODO make more flexible
-        self.players.append(User("P1"))
-        self.players.append(User("P2"))
-
+        for i in range(numPlayers):
+            player = Player(f"P{i}") 
+            self.players.append(player)
 
         for p in self.players:
             p.drawLetters(self.letters)

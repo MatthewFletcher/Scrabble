@@ -16,6 +16,14 @@ class Tile:
     def __str__(self):
         return f"[{self.char}{self.ptval}] "
 
+    def __eq__(self, other):
+        if isinstance(other, str):
+            return self.char == other
+        elif isinstance(other, Tile):
+            return self.char == other.char
+        else:
+            return False 
+
 class User:
     def __init__(self, name):
         self.name = name
@@ -32,16 +40,22 @@ class User:
                         "text": "View Rack", 
                         "fn": self.printRack,
                         "endTurn": False
+                    },
+                "p": {
+                        "text": "Play a word", 
+                        "fn": self.playWord,
+                        "endTurn": True
                     }
 
                 }
+
      
 
     def getChoice(self):
         while True:
             for key in self.choices.keys():
                 print(f"{key}: {self.choices[key]['text']}")
-            choice = input("Enter your choice -> ")
+            choice = input("What would you like to do? Enter your choice -> ")
             if choice in self.choices.keys():
                 break
         return self.choices[choice]
@@ -54,9 +68,45 @@ class User:
         for tile in self.letters:
             retStr += f"{tile!s}"
         return retStr 
+    
+    def getRackLetters(self):
+        return [t.char for t in self.letters]
+
+    def searchRack(self,char):
+        char = char.upper()
+        if char!= " " and char not in self.getRackLetters():
+            return None
+        else:
+            for idx, tile in enumerate(self.letters):
+                if tile.char == char:
+                    ret = self.letters.pop(idx)
+                    self._condenseletters()
+                    return ret
+     
 
     def printRack(self):
         print(self.getRackStr())
+
+    def playWord(self, *args):
+        #If word is passed to function, use that word
+        if not args:
+            pass
+
+        #If no args passed, use input method
+        while True:
+            word = list(input("Enter the letters to be used ->").upper())
+            toPlay = []
+            
+            for letter in word:
+                tile=self.searchRack(letter)
+                if tile:
+                    toPlay.append(tile)
+                else:
+                    print("Sorry, {letter} is not in your rack.")
+                    continue
+
+            print(f"Letters chosen: {''.join([t.char for t in toPlay])}")
+            print(f"letters remaining in rack: {[t.char for t in self.letters]}")
 
     def drawLetters(self,pool,num=0):
 
@@ -80,7 +130,7 @@ class User:
     def shuffleLetters(self):
         r.shuffle(self.letters)
 
-    def takeTurn(self):
+    def takeTurn(self, *args):
         print(f"{self.name}'s turn")
         while True:
             choice = self.getChoice() 

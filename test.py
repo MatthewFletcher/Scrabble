@@ -1,5 +1,6 @@
-#!/usr/bin/python3.8
+#!/usr/bin/env python3
 
-from Parts import Game
-g = Game()
-g.playGame()
+
+from Parts import *
+b = Board()
+t = Tile("A", 1)

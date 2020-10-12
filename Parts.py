@@ -229,6 +229,8 @@ class Board:
         #Vertical code
         if direction == 'd':
             for i, tile in enumerate(word):
+                if (i+x) > self.SIZE:
+                    return False
                 result = self.placeTile(tile,x,y+i)
                 if result is False:
                     #TODO GET RID OF TILES

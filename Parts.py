@@ -1,5 +1,6 @@
 import json
 import random as r
+import copy
 
 
 
@@ -33,33 +34,33 @@ class Player:
 
         self.choices = {
                 "s": {
-                        "text": "Shuffle Letters", 
-                        "fn": self.shuffleLetters,
-                        "endTurn": False
+                    "text": "Shuffle Letters", 
+                    "fn": self.shuffleLetters,
+                    "endTurn": False
                     },
                 "v": {
-                        "text": "View Rack", 
-                        "fn": self.printRack,
-                        "endTurn": False
+                    "text": "View Rack", 
+                    "fn": self.printRack,
+                    "endTurn": False
                     },
                 "p": {
-                        "text": "Play a word", 
-                        "fn": self.playWord,
-                        "endTurn": True
+                    "text": "Play a word", 
+                    "fn": self.playWord,
+                    "endTurn": True
                     }
 
                 }
 
-     
 
-    def getChoice(self):
-        while True:
-            for key in self.choices.keys():
-                print(f"{key}: {self.choices[key]['text']}")
-            choice = input("What would you like to do? Enter your choice -> ")
-            if choice in self.choices.keys():
-                break
-        return self.choices[choice]
+
+        def getChoice(self):
+            while True:
+                for key in self.choices.keys():
+                    print(f"{key}: {self.choices[key]['text']}")
+                choice = input("What would you like to do? Enter your choice -> ")
+                if choice in self.choices.keys():
+                    break
+            return self.choices[choice]
 
     def _condenseletters(self):
         self.letters = [item for item in self.letters if item]
@@ -69,7 +70,7 @@ class Player:
         for tile in self.letters:
             retStr += f"{tile!s}"
         return retStr 
-    
+
     def getRackLetters(self):
         return [t.char for t in self.letters]
 
@@ -83,7 +84,7 @@ class Player:
                     ret = self.letters.pop(idx)
                     self._condenseletters()
                     return ret
-     
+
 
     def printRack(self):
         print(self.getRackStr())
@@ -97,7 +98,7 @@ class Player:
         while True:
             word = list(input("Enter the letters to be used ->").upper())
             toPlay = []
-            
+
             for letter in word:
                 tile=self.searchRack(letter)
                 if tile:
@@ -169,7 +170,9 @@ class Square:
         self.letter = ""
         self.multNum = multNum
         self.multType = multType
-    
+
+        self.pending = False
+
     def placeTile(self, tile):
         if self.tile:
             return False
@@ -183,20 +186,65 @@ class Square:
 class Board:
     def __init__(self):
         self.SIZE = 15
-        self.board = [[Square() for _ in range(self.SIZE)] for _ in
-                range(self.SIZE)]
+        self.MAX = self.SIZE - 1 
+        self.board = [[Square() for _ in range(self.SIZE)] for _ in range(self.SIZE)]
         self.center = self.board[8][8]
 
+    def placeTile(self, tile, x,y):
+        if self.board[x][y].tile is None:
+            self.board[x][y].placeTile(tile)
+            return True
+        else:
+            print(f"Tile is already laid at {x}, {y}")
+            return False
 
+    def placeWord(self, word, direction, x,y):
+        '''
+       word: list of TILE OBJECTS to be played (in order)
+       direction: 'a', 'd' (across or down)
+       x: x location of word start
+       y: y location of word start
+       '''
+
+        #Make a backup of the board in case user tries to break it
+        origBoard = copy.deepcopy(self.board)
+    
+        #Check that word will not go off edge of board 
+        if direction == 'a' and (len(word)+x) > self.MAX:
+            return False
+        if direction == 'd' and (len(word)+y) > self.MAX:
+            return False
+
+        #Word fits on boundaries of board.
+        #Now check if the tiles are clear
+
+        #Horizontal Code
+        if direction == 'a':
+            for i, tile in enumerate(word):
+                result = self.placeTile(tile,x+i,y)
+                if result is False:
+                    #TODO GET RID OF TILES
+                    self.board = origBoard
+                    return False
+        #Vertical code
+        if direction == 'd':
+            for i, tile in enumerate(word):
+                result = self.placeTile(tile,x,y+i)
+                if result is False:
+                    #TODO GET RID OF TILES
+                    self.board = origBoard
+                    return False
+        
+        return True
 
     def printBoard(self):
         print("   ", end="")
-        for idx in range(15):
-            print("{0: <2}".format(idx), end="")
+        for idx in range(self.SIZE):
+            print("{0: >2}".format(idx), end="")
         print()
-        for idx in range(15):
+        for idx in range(self.SIZE):
             print("{0: <2} |".format(idx), end="")
-            for jdx in range(15):
+            for jdx in range(self.SIZE):
                 sq = self.board[idx][jdx]
                 if sq.tile == None:
                     print(" ", end="|")
@@ -205,7 +253,6 @@ class Board:
                 else:
                     print(f"{sq.letter}", end="|")
             #Print new line
-
             print("") 
 
 class Game:
